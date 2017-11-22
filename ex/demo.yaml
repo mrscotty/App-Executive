@@ -157,3 +157,6 @@ menus:
       - desc: Directory for data transfer
         id: xfer-dir
         prefix: --xfer
+  - desc: Command Shell
+    id: shell
+    command: ex/run-shell.sh
