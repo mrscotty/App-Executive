@@ -1,5 +1,8 @@
 #!/usr/bin/env perl
 
+local $YAML::UseCode = 1;
+local $YAML::SortKeys = 2;
+
 use strict;
 use warnings;
 
@@ -8,161 +11,12 @@ use Curses;
 use Curses::UI;
 use Term::Script;
 use App::Executive;
+use YAML qw(LoadFile);
 
-my $cfg = {
-    opts => {
-        script => 1,
-        debug  => 0,
-    },
-    menus => [
-        {
-            id      => 'setopts',
-            desc    => 'Set global options',
-            command => sub {
-                my $cfg  = shift;
-                my %args = @_;
-                foreach my $key ( keys %args ) {
-                    #warn "DEBUG: Setting $key=>", $args{$key};
-                    $cfg->{opts}->{$key} = $args{$key};
-                }
-            },
-            args => [
-                {
-                    id       => 'custref',
-                    desc     => 'Customer Reference',
-                    optional => 1,
-                },
-                {
-                    id       => 'rootca_idx',
-                    desc     => 'Root CA Sequence Number',
-                    optional => 1,
-                },
-                {
-                    id       => 'gituser',
-                    desc     => 'Full User (for audit log)',
-                    optional => 1,
-                },
-                {
-                    id       => 'gitmail',
-                    desc     => 'Email Address (for audit log)',
-                    optional => 1,
-                },
-            ],
-        },
-        {
-            id      => 'sys-status',
-            desc    => 'Display System Status',
-            command => 'ex/sys-status.sh',
-#            prereq  => [qw( custref )],
-            args => [
-                {
-                    id => 'sys_status_verbose',
-                    desc => 'Verbose output?',
-                    prefix => '--verbose',
-                    type => 'flag',
-                },
-            ],
-        },
-        {
-            id      => 'init-root-ca',
-            desc    => 'Initialize Root CA',
-            command => 'ex/init-root-ca.sh',
-            args => [
-                {
-                    id       => 'custref',
-                    desc     => 'Customer Reference',
-                    prefix => '--custref',
-                    optional => 1,
-                },
-                {
-                    id       => 'rootca_idx',
-                    desc     => 'Root CA Sequence Number',
-                    prefix => '--root-ca-seq',
-                    optional => 1,
-                },
-                {
-                    id => 'sys_status_verbose',
-                    desc => 'Verbose output?',
-                },
-            ],
-#            prereq  => [qw( gituser gitmail )],
-        },
-        {
-            id      => 'issue-root-crl',
-            desc    => 'Issue Root CA Certificate Revocation List',
-            command => 'ex/issue-root-crl.sh',
-            args => [
-                {
-                    id       => 'custref',
-                    desc     => 'Customer Reference',
-                    prefix => '--custref',
-                    optional => 1,
-                },
-                {
-                    id       => 'rootca_idx',
-                    desc     => 'Root CA Sequence Number',
-                    prefix => '--root-ca-seq',
-                    optional => 1,
-                },
-            ],
-        },
-        {
-            id      => 'issue-level2-certs',
-            desc    => 'Issue Level2 CA Certificates',
-            command => 'ex/issue-level2-certs.sh',
-            args => [
-                {
-                    id       => 'custref',
-                    desc     => 'Customer Reference',
-                    prefix => '--custref',
-                    optional => 1,
-                },
-                {
-                    id       => 'rootca_idx',
-                    desc     => 'Root CA Sequence Number',
-                    prefix => '--root-ca-seq',
-                    optional => 1,
-                },
-                {
-                    id       => 'xfer-dir',
-                    desc     => 'Directory for data transfer',
-                    prefix => '--xfer',
-                },
-            ],
-        },
-        {
-            id      => 'backup-data',
-            desc    => 'Backup Volatile Data',
-            command => 'ex/backup-data.sh',
-            args => [
-                {
-                    id       => 'custref',
-                    desc     => 'Customer Reference',
-                    prefix => '--custref',
-                    optional => 1,
-                },
-                {
-                    id       => 'xfer-dir',
-                    desc     => 'Directory for data transfer',
-                    prefix => '--xfer',
-                },
-            ],
-        },
-        {
-            id      => 'recover-data',
-            desc    => 'Recover/Update Volatile Data',
-            command => 'ex/recover-data.sh',
-            args => [
-                {
-                    id       => 'xfer-dir',
-                    desc     => 'Directory for data transfer',
-                    prefix => '--xfer',
-                },
-            ],
-        },
+my $cfg = LoadFile('ex/demo.yaml') or die "Error loading YAML config: $@";
 
-    ],
-};
+my $app = App::Executive->new( { data => $cfg } );
+$app->validate() or die $@;
 
 sub move_list_sel {
     my $list = shift;
@@ -196,9 +50,6 @@ my $cui = Curses::UI->new(
     -debug         => $cfg->{debug},
 );
 
-my $app = App::Executive->new( { data => $cfg } );
-$app->validate() or die $@;
-
 ############################################################
 # Initialize UI
 ############################################################
@@ -230,8 +81,6 @@ $list1->draw();
 $cui->status("This is the status line.");
 $cui->set_binding( sub { exit(0); }, "\cQ" );
 $cui->set_binding( sub { exit(0); }, "\cC" );
-
-# option-next, option-prev
 
 #$cui->set_binding( sub {
 #        move_list_sel( $list1, +1 );

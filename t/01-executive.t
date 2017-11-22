@@ -1,12 +1,16 @@
 #!/usr/bin/perl
 #
 
+local $YAML::UseCode = 1;
+
 use strict;
 use warnings;
 
 use Test::More;
 use Data::Dumper;
 use App::Executive;
+use YAML qw(Dump LoadFile);
+
 
 my $menucfg = [
     {
@@ -90,6 +94,10 @@ my $cfg = {
         gitmail => 'joe@example.com',
     },
 };
+
+# Overwrite above with YAML contents
+$cfg = LoadFile('t/test-01.yaml') or die "Error loading t/test-01.yaml: $@";
+
 
 my $app = App::Executive->new( { data => $cfg } );
 isa_ok( $app, 'App::Executive' );

@@ -1,0 +1,159 @@
+---
+opts:
+  debug: 0
+  script: 1
+  auditdir: ./auditlogs
+menus:
+  - desc: Set global options
+    id: setopts
+    help: Set global options and defaults for other programs
+    command: !!perl/code |
+      {
+          use warnings;
+          use strict;
+          my $cfg = shift();
+          my(%args) = @_;
+          foreach my $key (keys %args) {
+              $cfg->{'opts'}{$key} = $args{$key};
+          }
+      }
+    args:
+      - desc: Customer Reference
+        id: custref
+        help: >
+            This is a user-specified string that is used in the audit
+            logs for the session. Typically, this is a reference to
+            the the organization's change management system.
+        optional: 1
+      - desc: Root CA Sequence Number
+        id: rootca_idx
+        help: >
+            For Root CA rollover, this sequence number is incremented for
+            each new CA generation
+        optional: 1
+      - desc: Audit Log Directory
+        id: auditdir
+        help: Location to write all audit (session typescript) logs
+        optional: 1
+      - desc: Full User (for audit log)
+        id: gituser
+        help: >
+           The data backup uses Git to create an audit trail of all data
+           modifications. This user is used as the author and committer
+           for the Git commits.
+        optional: 1
+      - desc: Email Address (for audit log)
+        id: gitmail
+        help: >
+           The data backup uses Git to create an audit trail of all data
+           modifications. This email is used as the author and committer
+           for the Git commits.
+        optional: 1
+  - desc: Display System Status
+    id: sys-status
+    command: ex/sys-status.sh
+    help: >
+        Display a report of the system status (e.g. current CA cert,
+        CRL, etc.).
+    args:
+      - desc: Verbose output?
+        id: sys_status_verbose
+        help: Display additional verbose report information.
+        prefix: --verbose
+        type: flag
+  - desc: Initialize Root CA
+    id: init-root-ca
+    command: ex/init-root-ca.sh
+    args:
+      - desc: Customer Reference
+        id: custref
+        help: >
+            This is a user-specified string that is used in the audit
+            logs for the session. Typically, this is a reference to
+            the the organization's change management system.
+        optional: 1
+        prefix: --custref
+      - desc: Root CA Sequence Number
+        id: rootca_idx
+        help: >
+            For Root CA rollover, this sequence number is incremented for
+            each new CA generation
+        optional: 1
+        prefix: --root-ca-seq
+      - desc: Verbose output?
+        id: sys_status_verbose
+  - desc: Issue Root CA Certificate Revocation List
+    id: issue-root-crl
+    command: ex/issue-root-crl.sh
+    args:
+      - desc: Customer Reference
+        id: custref
+        help: >
+            This is a user-specified string that is used in the audit
+            logs for the session. Typically, this is a reference to
+            the the organization's change management system.
+        optional: 1
+        prefix: --custref
+      - desc: Root CA Sequence Number
+        id: rootca_idx
+        help: >
+            For Root CA rollover, this sequence number is incremented for
+            each new CA generation
+        optional: 1
+        prefix: --root-ca-seq
+  - desc: Issue Level2 CA Certificates
+    id: issue-level2-certs
+    command: ex/issue-level2-certs.sh
+    args:
+      - desc: Customer Reference
+        id: custref
+        help: >
+            This is a user-specified string that is used in the audit
+            logs for the session. Typically, this is a reference to
+            the the organization's change management system.
+        optional: 1
+        prefix: --custref
+      - desc: Root CA Sequence Number
+        id: rootca_idx
+        help: >
+            For Root CA rollover, this sequence number is incremented for
+            each new CA generation
+        optional: 1
+        prefix: --root-ca-seq
+      - desc: Directory for data transfer
+        id: xfer-dir
+        prefix: --xfer
+  - desc: Backup Volatile Data
+    id: backup-data
+    command: ex/backup-data.sh
+    args:
+      - desc: Customer Reference
+        id: custref
+        help: >
+            This is a user-specified string that is used in the audit
+            logs for the session. Typically, this is a reference to
+            the the organization's change management system.
+        optional: 1
+        prefix: --custref
+      - desc: Directory for data transfer
+        id: xfer-dir
+        prefix: --xfer
+      - desc: Full User (for audit log)
+        id: gituser
+        help: >
+           The data backup uses Git to create an audit trail of all data
+           modifications. This user is used as the author and committer
+           for the Git commits.
+      - desc: Email Address (for audit log)
+        id: gitmail
+        help: >
+           The data backup uses Git to create an audit trail of all data
+           modifications. This email is used as the author and committer
+           for the Git commits.
+  - desc: Recover/Update Volatile Data
+    id: recover-data
+    command: ex/recover-data.sh
+    args:
+      - desc: Directory for data transfer
+        id: xfer-dir
+        prefix: --xfer

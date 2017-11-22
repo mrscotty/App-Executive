@@ -1,0 +1,56 @@
+---
+opts:
+  gitmail: joe@example.com
+  gituser: Joe Blow
+  script: 1
+menus:
+  - args:
+      - desc: Customer Reference
+        id: custref
+      - desc: Full User (for audit log)
+        id: gituser
+        optional: 1
+      - desc: Email Address (for audit log)
+        id: gitmail
+        optional: 1
+    command: !!perl/code |
+      {
+          use warnings;
+          use strict;
+          my $cfg = shift();
+          my(%args) = @_;
+          foreach my $key (keys %args) {
+              $cfg->{$key} = $args{$key};
+          }
+      }
+    desc: Test menu 1
+    id: test1
+  - args:
+      - desc: Customer Reference
+        id: custref
+      - desc: Parameter 1
+        id: param1
+        optional: 1
+        prefix: --param1
+      - desc: Verbose output?
+        id: test2_verbose
+        optional: 1
+        prefix: --verbose
+        type: flag
+    command: test2.sh
+    desc: Test menu 2
+    id: test2
+    prereq:
+      - custref
+  - command: test3.sh
+    desc: Test menu 3
+    id: test3
+    prereq:
+      - gituser
+      - gitmail
+  - command: test4.sh
+    desc: Test menu 4
+    id: test4
+  - command: test5.sh
+    desc: Test menu 5
+    id: test5
