@@ -1,7 +1,11 @@
 ---
 opts:
   gitmail: joe@example.com
-  gituser: Joe Blow
+  gituser: !!perl/code |
+      {
+          # demo for initializing var with perl code
+          'Joe Blow';
+      }
   script: 1
 menus:
   - args:
@@ -25,6 +29,7 @@ menus:
       }
     desc: Test menu 1
     id: test1
+    help: "This is help for test1"
   - args:
       - desc: Customer Reference
         id: custref
@@ -42,6 +47,9 @@ menus:
     id: test2
     prereq:
       - custref
+    help: >
+        This is help
+        for test2
   - command: test3.sh
     desc: Test menu 3
     id: test3

@@ -8,6 +8,23 @@ our $VERSION = "0.01";
 
 has 'data' => ( is => 'rw', );
 
+sub opt {
+    my $self = shift;
+    my $id = shift or return;
+    my $data = $self->data() or die "Error: data not set";
+    if ( @_ ) {
+        return $data->{opts}->{$id} = shift;
+    } 
+    if ( not exists $data->{opts}->{$id} ) {
+        return;
+    }
+    my $val = $data->{opts}->{$id};
+    if ( ref($val) eq 'CODE' ) {
+        $val = $val->($data);
+    }
+    return $val;
+}
+
 sub _menuent {
     my $self = shift;
     my $id   = shift;
@@ -100,6 +117,18 @@ sub command {
     my $rec  = $self->_menuent($id);
     if ( defined $rec ) {
         return $rec->{command};
+    }
+    else {
+        return;
+    }
+}
+
+sub menuhelp {
+    my $self = shift;
+    my $id   = shift or die "Error: menuhelp() requires ID";
+    my $rec  = $self->_menuent($id);
+    if ( defined $rec ) {
+        return $rec->{help};
     }
     else {
         return;

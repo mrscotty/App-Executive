@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-local $YAML::UseCode = 1;
+local $YAML::UseCode  = 1;
 local $YAML::SortKeys = 2;
 
 use strict;
@@ -11,38 +11,14 @@ use Curses;
 use Curses::UI;
 use Term::Script;
 use App::Executive;
+use File::Path qw(make_path);
 use YAML qw(LoadFile);
+use POSIX 'strftime';
 
 my $cfg = LoadFile('ex/demo.yaml') or die "Error loading YAML config: $@";
 
 my $app = App::Executive->new( { data => $cfg } );
 $app->validate() or die $@;
-
-sub move_list_sel {
-    my $list = shift;
-    my $inc  = shift;
-
-    my $pos = $list->id();
-    if ( not defined $pos ) {
-        warn "DEBUG: forcing pos=0";
-        $pos = 0;
-    }
-    my $max    = scalar @{ $list->values() };
-    my $newpos = $pos + $inc;
-    if ( $max == 0 ) {
-
-        # always force to 0 if list is empty
-        $newpos = 0;
-    }
-    elsif ( $newpos < 0 ) {
-        $newpos = 0;
-    }
-    elsif ( $newpos >= $max ) {
-        $newpos = $max - 1;
-    }
-    $list->set_selection($newpos);
-    $list->draw();
-}
 
 my $cui = Curses::UI->new(
     -clear_on_exit => 0,
@@ -64,16 +40,28 @@ my $win1 = $cui->add(
 
 my $status = $win1->add(
     statusbox => 'Label',
-    -border => 0,
-    -y => $win1->height - 1,
-    -width => $win1->width,
-    -bg => "black",
-    -fg => "white",
-    -text => "This is the default status box",
+    -border   => 0,
+    -y        => $win1->height - 1,
+    -width    => $win1->width,
+    -bg       => "black",
+    -fg       => "white",
+    -text     => "This is the default status box",
 );
 $status->textalignment('middle');
 $status->focus();
 $status->draw();
+
+my $help = $win1->add(
+    helpbox   => 'TextViewer',
+    -border   => 0,
+    -y        => $win1->height - 3,
+    -height   => 2,
+    -width    => $win1->width,
+    -text     => "help text",
+    -wrapping => 1,
+);
+$help->draw();
+$help->focus();
 
 my $list1 = $win1->add(
     'list1' => 'Listbox',
@@ -85,9 +73,23 @@ my $list1 = $win1->add(
     -padtop     => 0,
     -padbottom  => 0,
     -vscrollbar => 1,
-    -height => $win1->height - 1,
+    -height     => $win1->height - 3,
     -title      => 'Choose Task to Execute',
-    -onfocus    => sub { $status->text('Press <Enter> to choose task, <Ctl-Q> to quit'); },
+    -onfocus =>
+      sub { $status->text('Press <Enter> to choose task, <Ctl-Q> to quit'); },
+    -onselchange => sub {
+
+        #$help->text("this is a test");
+        #return;
+        my $this = shift;
+        $this->{-selected} = $this->{-ypos};
+        my $id = $this->get;
+        $this->{-selected} = undef;
+        my $helptext = $app->menuhelp($id);
+        $helptext ||= '';
+        chomp $helptext;
+        $help->text($helptext);
+    },
 );
 
 $list1->values( $app->menu_ids() );
@@ -97,15 +99,6 @@ $list1->draw();
 
 $cui->set_binding( sub { exit(0); }, "\cQ" );
 $cui->set_binding( sub { exit(0); }, "\cC" );
-$cui->set_binding( sub { exit(0); }, 97 );
-$cui->set_binding( sub { 
-        my $this = shift;
-        $cui->dialog(
-            -message => "DEBUG: this=$this",
-            -title   => "Important",
-            -buttons => ['ok'],
-        );
-    }, "\cX" );
 
 #$cui->set_binding( sub {
 #        move_list_sel( $list1, +1 );
@@ -121,57 +114,69 @@ $list1->set_routine( 'option-select', \&start_runbook );
 #
 
 sub get_args {
-    my $cui = shift;
-    my $title = shift;
+    my $cui     = shift;
+    my $title   = shift;
     my $argdefs = shift;
-    my @args = ();
+    my @args    = ();
 
-    my $viewwin = $cui->add('view_window', 'Window',
-        -border => 1,
-        -ipad => 2,
-        -height => $win1->height - 1,
-        -title => $title,
-        -onfocus    => sub { $status->text( 'Press <Tab> to switch field, <Enter> to execute, <Ctl-C> to exit menu'); },
+    my $viewwin = $cui->add(
+        'view_window',
+        'Window',
+        -border  => 1,
+        -ipad    => 2,
+        -height  => $win1->height - 3,
+        -title   => $title,
+        -onfocus => sub {
+            $status->text(
+'Press <Tab> to switch field, <Enter> to execute, <Ctl-C> to exit menu'
+            );
+        },
     );
-    my $grey = Curses::UI::Color->new();
-    $grey->define_color('grey', 250, 250, 250);
 
-    my $i = 0;
+    my $i    = 0;
     my $rowh = 2;
-    
+
     # figure out label width
     my $lwidth = 0;
-    foreach my $str ( map { $_->{desc} } @{ $argdefs } ) {
+    foreach my $str ( map { $_->{desc} } @{$argdefs} ) {
         my $len = length($str);
         if ( $len > $lwidth ) {
             $lwidth = $len;
         }
     }
-    foreach my $arg ( @{ $argdefs } ) {
+    foreach my $arg ( @{$argdefs} ) {
         my $id = $arg->{id};
         $viewwin->add(
             'label_' . $id, 'Label',
-            -x => 0, -y => $i * $rowh, -width => $lwidth,
+            -x             => 0,
+            -y             => $i * $rowh,
+            -width         => $lwidth,
             -textalignment => 'left',
-            -bold => 1,
-            -text => ($arg->{desc} || $id),
+            -bold          => 1,
+            -text          => ( $arg->{desc} || $id ),
         );
         my $ent = $viewwin->add(
             $arg->{id} || 'val_' . $i, 'TextEntry',
-            -bg => $grey,
-            -x => $lwidth+1, -y => $i * $rowh,
+            -x        => $lwidth + 1,
+            -y        => $i * $rowh,
             -sbborder => 1,
-            -text => (defined $cfg->{opts}->{$id} ? $cfg->{opts}->{$id} : ''),
+            -text     => ( defined $app->opt($id) ? $app->opt($id) : '' ),
         );
         if ( not $i ) {
-            $ent->focus(); # Set focus on first field
+            $ent->focus();    # Set focus on first field
         }
         $i++;
     }
-    $viewwin->set_binding(sub{ my $this = shift; @args = &check_args($this, $argdefs); $this->loose_focus }, KEY_ENTER());
-    $viewwin->set_binding(sub{ my $this = shift; $this->loose_focus }, "\cC");
-
-
+    $viewwin->set_binding(
+        sub {
+            my $this = shift;
+            @args = &check_args( $this, $argdefs );
+            $this->loose_focus;
+        },
+        KEY_ENTER()
+    );
+    $viewwin->set_binding( sub { my $this = shift; $this->loose_focus },
+        "\cC" );
 
     $viewwin->modalfocus;
     $cui->delete('view_window');
@@ -180,15 +185,15 @@ sub get_args {
 }
 
 sub check_args {
-    my $this = shift;
+    my $this    = shift;
     my $argdefs = shift;
-    my $cui = $this->root;
-    my @args = ();
+    my $cui     = $this->root;
+    my @args    = ();
 
-    foreach my $arg ( @{ $argdefs } ) {
-        my $obj = $this->getobj($arg->{id});
+    foreach my $arg ( @{$argdefs} ) {
+        my $obj = $this->getobj( $arg->{id} );
         my $val = $obj->get;
-        if (defined $val) {
+        if ( defined $val ) {
             push @args, $arg->{id}, $val;
         }
     }
@@ -219,30 +224,47 @@ sub start_runbook {
     else {
         my @args;
         my $argdef;
-        eval { $argdef = $app->args( $id )};
-        if ( $@ ) {
-            $cui->error("Error getting args: " . $@);
+        eval { $argdef = $app->args($id) };
+        if ($@) {
+            $cui->error( "Error getting args: " . $@ );
             exit 1;
         }
 
         if ( ref($argdef) eq 'ARRAY' ) {
-            eval { @args = get_args($cui, $app->menu_desc($id), $argdef); 1; } or 
-                $cui->error("Error getting args: " . $@) && 
-                exit 1;
+            eval { @args = get_args( $cui, $app->menu_desc($id), $argdef ); 1; }
+              or $cui->error( "Error getting args: " . $@ ) && exit 1;
         }
 
         my $cmd = $app->command($id);
         if ( ref($cmd) eq 'CODE' ) {
-            #warn "DEBUG: executing code for command with args: ", join(', ', @args);
-            $cmd->($cfg, @args);
-        } else {
-            my @map_args = $app->map_args( $id, @args );
+
+       #warn "DEBUG: executing code for command with args: ", join(', ', @args);
+            $cmd->( $cfg, @args );
+        }
+        else {
             $cui->leave_curses();
-            print "Got args: ", join(', ', @map_args), "\n";
-            my $ts = Term::Script->new(file => 'tmp');
-            $ts->run($cmd, @args);
+
+            my @map_args = $app->map_args( $id, @args );
+            my %args = @args;
+
+            print "Got args: ", join( ', ', @map_args ), "\n";
+            my $tsfile = $app->opt('auditdir') . '/';
+            if ( not -d $tsfile ) {
+                make_path $tsfile;
+            }
+            if ( not -d $tsfile ) {
+                die "Error: directory $tsfile not found";
+            }
+            my $custref = $args{custref} || $app->opt('custref');
+            if ($custref) {
+                $tsfile .= $custref . '-';
+            }
+            $tsfile .= strftime( '%Y-%m-%d-%H:%M:%S.log', localtime );
+            my $ts = Term::Script->new( file => $tsfile );
+            $ts->run( $cmd, @args );
             print "Press '<Enter>' to return to menu: ";
             readline;
+
             $cui->reset_curses();
             $cui->draw();
         }

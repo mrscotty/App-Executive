@@ -2,7 +2,10 @@
 opts:
   debug: 0
   script: 1
-  auditdir: ./auditlogs
+  auditdir: !!perl/code |
+      {
+          $ENV{HOME} . '/auditlogs';
+      }
 menus:
   - desc: Set global options
     id: setopts
@@ -64,6 +67,9 @@ menus:
   - desc: Initialize Root CA
     id: init-root-ca
     command: ex/init-root-ca.sh
+    help: >
+        Initialize the Root CA based on the existing configuration files
+        (i.e. profiles).
     args:
       - desc: Customer Reference
         id: custref
@@ -85,6 +91,7 @@ menus:
   - desc: Issue Root CA Certificate Revocation List
     id: issue-root-crl
     command: ex/issue-root-crl.sh
+    help: Issue a new CRL for the Root CA. 
     args:
       - desc: Customer Reference
         id: custref
@@ -104,6 +111,9 @@ menus:
   - desc: Issue Level2 CA Certificates
     id: issue-level2-certs
     command: ex/issue-level2-certs.sh
+    help: >
+        Issue certificates for all files named *.req in the
+        specified data transfer directory.
     args:
       - desc: Customer Reference
         id: custref
@@ -126,6 +136,10 @@ menus:
   - desc: Backup Volatile Data
     id: backup-data
     command: ex/backup-data.sh
+    help: >
+        Create a Git commit containing all modified files in the home
+        directory and export (via Git bundle) to the data transfer
+        directory.
     args:
       - desc: Customer Reference
         id: custref
@@ -153,10 +167,14 @@ menus:
   - desc: Recover/Update Volatile Data
     id: recover-data
     command: ex/recover-data.sh
+    help: >
+        Update/recover the data in the home directory from the backup
+        (via Git bundle) in the data transfer directory.
     args:
       - desc: Directory for data transfer
         id: xfer-dir
         prefix: --xfer
   - desc: Command Shell
     id: shell
+    help: Execute a command shell (with audit logging).
     command: ex/run-shell.sh

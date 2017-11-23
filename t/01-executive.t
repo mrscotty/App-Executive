@@ -12,95 +12,14 @@ use App::Executive;
 use YAML qw(Dump LoadFile);
 
 
-my $menucfg = [
-    {
-        id      => 'test1',
-        desc    => 'Test menu 1',
-        command => sub {
-            my $cfg  = shift;
-            my %args = @_;
-            foreach my $key ( keys %args ) {
-                $cfg->{$key} = $args{$key};
-            }
-        },
-        args => [
-            {
-                id   => 'custref',
-                desc => 'Customer Reference',
-            },
-            {
-                id       => 'gituser',
-                desc     => 'Full User (for audit log)',
-                optional => 1,
-            },
-            {
-                id       => 'gitmail',
-                desc     => 'Email Address (for audit log)',
-                optional => 1,
-            },
-        ],
-    },
-    {
-        id      => 'test2',
-        desc    => 'Test menu 2',
-        command => 'test2.sh',
-        prereq  => [qw( custref )],
-        args    => [
-            {
-                id   => 'custref',
-                desc => 'Customer Reference',
-            },
-            {
-                id       => 'param1',
-                desc     => 'Parameter 1',
-                prefix   => '--param1',
-                optional => 1,
-            },
-            {
-                id       => 'test2_verbose',
-                desc     => 'Verbose output?',
-                optional => 1,
-                prefix   => '--verbose',
-                type     => 'flag',
-            },
-        ],
-    },
-    {
-        id      => 'test3',
-        desc    => 'Test menu 3',
-        command => 'test3.sh',
-        prereq  => [qw( gituser gitmail )],
-    },
-    {
-        id      => 'test4',
-        desc    => 'Test menu 4',
-        command => 'test4.sh',
-    },
-    {
-        id      => 'test5',
-        desc    => 'Test menu 5',
-        command => 'test5.sh',
-    },
-
-];
-
-my $cfg = {
-    menus => $menucfg,
-    opts  => {
-
-        #        custref => 'REQ123',
-        script  => 1,
-        gituser => 'Joe Blow',
-        gitmail => 'joe@example.com',
-    },
-};
-
 # Overwrite above with YAML contents
-$cfg = LoadFile('t/test-01.yaml') or die "Error loading t/test-01.yaml: $@";
+my $cfg = LoadFile('t/test-01.yaml') or die "Error loading t/test-01.yaml: $@";
 
 
 my $app = App::Executive->new( { data => $cfg } );
 isa_ok( $app, 'App::Executive' );
+
+is($app->opt('gituser'), 'Joe Blow', 'expand perl code in opts');
 
 my @menu = $app->menu();
 is_deeply(
@@ -172,6 +91,9 @@ is_deeply(
     [ ],
     'arg test - bad flag'
 ) or diag "args: ", join( ', ', @args );
+
+is($app->menuhelp('test1'), "This is help for test1", 'help: single line');
+is($app->menuhelp('test2'), "This is help for test2\n", 'help: multi line');
 
 done_testing;
 
