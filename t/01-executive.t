@@ -10,16 +10,15 @@ use Test::More;
 use Data::Dumper;
 use App::Executive;
 use YAML qw(Dump LoadFile);
-
+use POSIX 'strftime';
 
 # Overwrite above with YAML contents
 my $cfg = LoadFile('t/test-01.yaml') or die "Error loading t/test-01.yaml: $@";
 
-
 my $app = App::Executive->new( { data => $cfg } );
 isa_ok( $app, 'App::Executive' );
 
-is($app->opt('gituser'), 'Joe Blow', 'expand perl code in opts');
+is( $app->opt('gituser'), 'Joe Blow', 'expand perl code in opts' );
 
 my @menu = $app->menu();
 is_deeply(
@@ -82,18 +81,36 @@ is_deeply(
     'arg test - all'
 ) or diag "args: ", join( ', ', @args );
 
-@args = $app->map_args(
-    'test2',
-    'test2_verbose' => 'yup'
-);
-is_deeply(
-    \@args,
-    [ ],
-    'arg test - bad flag'
-) or diag "args: ", join( ', ', @args );
+@args = $app->map_args( 'test2', 'test2_verbose' => 'yup' );
+is_deeply( \@args, [], 'arg test - bad flag' )
+  or diag "args: ", join( ', ', @args );
 
-is($app->menuhelp('test1'), "This is help for test1", 'help: single line');
-is($app->menuhelp('test2'), "This is help for test2\n", 'help: multi line');
+is( $app->menuhelp('test1'), "This is help for test1",   'help: single line' );
+is( $app->menuhelp('test2'), "This is help for test2\n", 'help: multi line' );
+is( $app->tsdir,             'mylogdir',                 'tsdir()' );
+
+# Don't run these tests at midnight ;-)
+my $timestr = strftime( '%Y-%m-%d', localtime );
+like(
+    $app->tsfile,
+    qr{^mylogdir/$timestr-(\d{2}):(\d{2}):(\d{2}).log$},
+    'ts file with no vars'
+);
+like(
+    $app->tsfile('unknownopt'),
+    qr{^mylogdir/$timestr-(\d{2}):(\d{2}):(\d{2}).log$},
+    'ts file with unknown var'
+);
+like(
+    $app->tsfile('testopt1'),
+    qr{^mylogdir/testoptval1-$timestr-(\d{2}):(\d{2}):(\d{2}).log$},
+    'ts file with one var'
+);
+like(
+    $app->tsfile( 'testopt1', 'testopt2' ),
+    qr{^mylogdir/testoptval1-testoptval2-$timestr-(\d{2}):(\d{2}):(\d{2}).log$},
+    'ts file with two vars'
+);
 
 done_testing;
 

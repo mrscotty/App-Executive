@@ -7,6 +7,9 @@ opts:
           'Joe Blow';
       }
   script: 1
+  auditdir: mylogdir
+  testopt1: testoptval1
+  testopt2: testoptval2
 menus:
   - args:
       - desc: Customer Reference

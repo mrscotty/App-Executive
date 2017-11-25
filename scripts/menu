@@ -30,7 +30,6 @@ my $cui = Curses::UI->new(
 # Initialize UI
 ############################################################
 
-$cui->status("this is my status");
 my $win1 = $cui->add(
     'win1'  => 'Window',
     -padtop => 0,          # leave space for the menu
@@ -47,6 +46,7 @@ my $status = $win1->add(
     -fg       => "white",
     -text     => "This is the default status box",
 );
+
 $status->textalignment('middle');
 $status->focus();
 $status->draw();
@@ -128,7 +128,7 @@ sub get_args {
         -title   => $title,
         -onfocus => sub {
             $status->text(
-'Press <Tab> to switch field, <Enter> to execute, <Ctl-C> to exit menu'
+'Press <Tab> to switch field, <Enter> to execute, <Ctl-C> to return to menu'
             );
         },
     );
@@ -161,7 +161,11 @@ sub get_args {
             -y        => $i * $rowh,
             -sbborder => 1,
             -text     => ( defined $app->opt($id) ? $app->opt($id) : '' ),
+            -onfocus =>
+            sub { $help->text('Help: ' . $arg->{help}||''); },
         );
+        $ent->set_binding('loose-focus', KEY_DOWN());
+        $ent->set_binding(sub { $_[0]->parent->focus_prev()}, KEY_UP());
         if ( not $i ) {
             $ent->focus();    # Set focus on first field
         }
@@ -237,8 +241,6 @@ sub start_runbook {
 
         my $cmd = $app->command($id);
         if ( ref($cmd) eq 'CODE' ) {
-
-       #warn "DEBUG: executing code for command with args: ", join(', ', @args);
             $cmd->( $cfg, @args );
         }
         else {
@@ -248,19 +250,14 @@ sub start_runbook {
             my %args = @args;
 
             print "Got args: ", join( ', ', @map_args ), "\n";
-            my $tsfile = $app->opt('auditdir') . '/';
-            if ( not -d $tsfile ) {
-                make_path $tsfile;
+            if ( not -d $app->tsdir ) {
+                make_path $app->tsdir;
+                if ( not -d $app->tsdir ) {
+                    die "Error: creating directory '", $app->tsdir, "': $@";
+                }
             }
-            if ( not -d $tsfile ) {
-                die "Error: directory $tsfile not found";
-            }
-            my $custref = $args{custref} || $app->opt('custref');
-            if ($custref) {
-                $tsfile .= $custref . '-';
-            }
-            $tsfile .= strftime( '%Y-%m-%d-%H:%M:%S.log', localtime );
-            my $ts = Term::Script->new( file => $tsfile );
+
+            my $ts = Term::Script->new( file => $app->tsfile('custref') );
             $ts->run( $cmd, @args );
             print "Press '<Enter>' to return to menu: ";
             readline;
@@ -269,14 +266,6 @@ sub start_runbook {
             $cui->draw();
         }
     }
-
-    #my $book = $books->{$cur_val};
-    #warn "DEBUG: cur_val=$cur_val, book=$book";
-    #
-    #my @args = $book->exec();
-    #warn "DEBUG: args=", join(',', @args);
-    #
-
 }
 
 ############################################################

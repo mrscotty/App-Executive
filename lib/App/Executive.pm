@@ -3,6 +3,7 @@ use 5.008001;
 use strict;
 use warnings;
 use Moose;
+use POSIX 'strftime';
 
 our $VERSION = "0.01";
 
@@ -224,6 +225,27 @@ sub validate {
         }
     }
     return 1;
+}
+
+# Return typescript directory; default to $HOME/menu-audit
+sub tsdir {
+    my $self = shift;
+    return $self->opt('auditdir') || ($ENV{HOME} . '/menu-auditlog');
+}
+
+# Given: list of opts names to include in filename
+# Return: full path of typescript file
+sub tsfile {
+    my $self = shift;
+
+    my $timestr = strftime('%Y-%m-%d-%H:%M:%S', localtime);
+    my @vals = ();
+    foreach my $key ( @_ ) {
+        my $val = $self->opt($key);
+        push @vals, $val if $val;
+    }
+
+    return $self->tsdir . '/' . join('-', @vals, $timestr) . '.log';
 }
 
 1;
