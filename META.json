@@ -1,5 +1,5 @@
 {
-   "abstract" : "It's new $module",
+   "abstract" : "A Console Menu System for Logged Execution",
    "author" : [
       "Scott Hardin <scott@hnsc.de>"
    ],
@@ -42,6 +42,10 @@
       },
       "runtime" : {
          "requires" : {
+            "Curses::UI" : "0",
+            "Moose" : "0",
+            "Term::Readkey" : "0",
+            "YAML" : "0",
             "perl" : "5.008001"
          }
       },
@@ -52,5 +56,5 @@
       }
    },
    "release_status" : "unstable",
-   "version" : "0.01"
+   "version" : "0.1"
 }

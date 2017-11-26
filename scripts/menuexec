@@ -2,6 +2,7 @@
 
 local $YAML::UseCode  = 1;
 local $YAML::SortKeys = 2;
+our $VERSION = '0.1';
 
 use strict;
 use warnings;
@@ -15,7 +16,13 @@ use File::Path qw(make_path);
 use YAML qw(LoadFile);
 use POSIX 'strftime';
 
-my $cfg = LoadFile('ex/demo.yaml') or die "Error loading YAML config: $@";
+my $USAGE = <<"EOF";
+Usage: $0 [config.yaml]
+EOF
+
+my $cfgfile = shift @ARGV;
+$cfgfile ||= 'menuexec.yaml';
+my $cfg = LoadFile($cfgfile) or die "Error loading YAML config: $@\n\n$USAGE\n";
 
 my $app = App::Executive->new( { data => $cfg } );
 $app->validate() or die $@;
@@ -65,9 +72,6 @@ $help->focus();
 
 my $list1 = $win1->add(
     'list1' => 'Listbox',
-
-    #    -values => [ $app->menu_ids() ],
-    #    -labels => { $app->menu_labels() },
     -border     => 1,
     -ipad       => 1,
     -padtop     => 0,
@@ -79,8 +83,6 @@ my $list1 = $win1->add(
       sub { $status->text('Press <Enter> to choose task, <Ctl-Q> to quit'); },
     -onselchange => sub {
 
-        #$help->text("this is a test");
-        #return;
         my $this = shift;
         $this->{-selected} = $this->{-ypos};
         my $id = $this->get;
@@ -244,6 +246,10 @@ sub start_runbook {
             $cmd->( $cfg, @args );
         }
         else {
+            my $scriptdir = $app->opt('scriptdir') || '';
+            if ( $scriptdir ) {
+                $cmd = join('/', $scriptdir, $cmd);
+            }
             $cui->leave_curses();
 
             my @map_args = $app->map_args( $id, @args );
@@ -273,3 +279,40 @@ sub start_runbook {
 ############################################################
 
 $cui->mainloop;
+
+1;
+
+__END__
+
+=encoding utf-8
+
+=head1 NAME
+
+menuexec - A Console Menu System for Logged Execution
+
+=head1 SYNOPSIS
+
+    menuexec [config.yaml]
+
+=head1 DESCRIPTION
+
+The I<menuexec> is a simple menu system for wrapping a set of command-line
+scripts and programs into a user-friendly interface for the non-technical
+user. The console output for each command is logged to an audit log for
+future reference.
+
+The configuration file is in a simple YAML format for easy customizing.
+
+=head1 LICENSE
+
+Copyright (C) Scott Hardin.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 AUTHOR
+
+Scott Hardin E<lt>scott@hnsc.deE<gt>
+
+=cut
+ 

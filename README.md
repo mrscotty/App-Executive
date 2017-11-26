@@ -1,14 +1,19 @@
 # NAME
 
-App::Executive - It's new $module
+menuexec - A Console Menu System for Logged Execution
 
 # SYNOPSIS
 
-    use App::Executive;
+    menuexec [config.yaml]
 
 # DESCRIPTION
 
-App::Executive is ...
+The _menuexec_ is a simple menu system for wrapping a set of command-line
+scripts and programs into a user-friendly interface for the non-technical
+user. The console output for each command is logged to an audit log for
+future reference.
+
+The configuration file is in a simple YAML format for easy customizing.
 
 # LICENSE
 

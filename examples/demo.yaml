@@ -2,6 +2,7 @@
 opts:
   debug: 0
   script: 1
+  scriptdir: examples
   auditdir: !!perl/code |
       {
           $ENV{HOME} . '/auditlogs';
@@ -54,7 +55,7 @@ menus:
         optional: 1
   - desc: Display System Status
     id: sys-status
-    command: ex/sys-status.sh
+    command: sys-status.sh
     help: >
         Display a report of the system status (e.g. current CA cert,
         CRL, etc.).
@@ -66,7 +67,7 @@ menus:
         type: flag
   - desc: Initialize Root CA
     id: init-root-ca
-    command: ex/init-root-ca.sh
+    command: init-root-ca.sh
     help: >
         Initialize the Root CA based on the existing configuration files
         (i.e. profiles).
@@ -90,7 +91,7 @@ menus:
         id: sys_status_verbose
   - desc: Issue Root CA Certificate Revocation List
     id: issue-root-crl
-    command: ex/issue-root-crl.sh
+    command: issue-root-crl.sh
     help: Issue a new CRL for the Root CA. 
     args:
       - desc: Customer Reference
@@ -110,7 +111,7 @@ menus:
         prefix: --root-ca-seq
   - desc: Issue Level2 CA Certificates
     id: issue-level2-certs
-    command: ex/issue-level2-certs.sh
+    command: issue-level2-certs.sh
     help: >
         Issue certificates for all files named *.req in the
         specified data transfer directory.
@@ -135,7 +136,7 @@ menus:
         prefix: --xfer
   - desc: Backup Volatile Data
     id: backup-data
-    command: ex/backup-data.sh
+    command: backup-data.sh
     help: >
         Create a Git commit containing all modified files in the home
         directory and export (via Git bundle) to the data transfer
@@ -166,7 +167,7 @@ menus:
            for the Git commits.
   - desc: Recover/Update Volatile Data
     id: recover-data
-    command: ex/recover-data.sh
+    command: recover-data.sh
     help: >
         Update/recover the data in the home directory from the backup
         (via Git bundle) in the data transfer directory.
@@ -177,4 +178,4 @@ menus:
   - desc: Command Shell
     id: shell
     help: Execute a command shell (with audit logging).
-    command: ex/run-shell.sh
+    command: run-shell.sh

@@ -5,7 +5,7 @@ use warnings;
 use Moose;
 use POSIX 'strftime';
 
-our $VERSION = "0.01";
+our $VERSION = "0.1";
 
 has 'data' => ( is => 'rw', );
 
@@ -256,7 +256,7 @@ __END__
 
 =head1 NAME
 
-App::Executive - It's new $module
+App::Executive - Executive data structures
 
 =head1 SYNOPSIS
 
@@ -264,26 +264,7 @@ App::Executive - It's new $module
 
 =head1 DESCRIPTION
 
-App::Executive is ...
-
-=head2 Methods
-
-=over
-
-=item menu
-
-Returns an array of name/desc string pairs. This data is for
-building the text menu for the user to select from.
-
-=item arg ID
-
-Returns the list of arguments for a given ID.
-
-=item command ID
-
-Returns the command string (without args) for the given ID.
-
-=back
+See the script L<menuexec> for more details.
 
 =head1 LICENSE
 
