@@ -1,6 +1,6 @@
 name = "App-Executive"
 # badges = ["travis"]
-module_maker="ModuleBuildTiny"
+module_maker="ModuleBuild"
 readme_from="scripts/menuexec"
 abstract_from="scripts/menuexec"
 authors_from="scripts/menuexec"

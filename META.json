@@ -28,7 +28,7 @@
    "prereqs" : {
       "configure" : {
          "requires" : {
-            "Module::Build::Tiny" : "0.035"
+            "Module::Build" : "0.4005"
          }
       },
       "develop" : {
@@ -56,5 +56,16 @@
       }
    },
    "release_status" : "unstable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/mrscotty/App-Executive/issues"
+      },
+      "homepage" : "https://github.com/mrscotty/App-Executive",
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/mrscotty/App-Executive.git",
+         "web" : "https://github.com/mrscotty/App-Executive"
+      }
+   },
    "version" : "0.1"
 }

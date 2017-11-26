@@ -1,6 +1,5 @@
 This package is managed with Minilla. The common tasks are:
 
-    minil new     - Create a new dist
     minil test    - Run test cases
     minil dist    - Make your dist tarball
     minil install - Install your dist
