@@ -24,7 +24,7 @@ my %args = (
     requires => {
         'Curses::UI' => '0',
         'Moose' => '0',
-        'Term::Readkey' => '0',
+        'Term::ReadKey' => '0',
         'YAML' => '0',
         'perl' => '5.008001',
     },
