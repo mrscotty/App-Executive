@@ -2,7 +2,7 @@
 
 local $YAML::UseCode  = 1;
 local $YAML::SortKeys = 2;
-our $VERSION = '0.1';
+our $VERSION = '0.2';
 
 use strict;
 use warnings;

@@ -5,7 +5,7 @@ use warnings;
 use Moose;
 use POSIX 'strftime';
 
-our $VERSION = "0.1";
+our $VERSION = "0.2";
 
 has 'data' => ( is => 'rw', );
 
